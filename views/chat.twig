@@ -1,0 +1,102 @@
+{% extends "base.twig" %}
+
+{% block body %}
+<body class="page-chat">
+		<h1>Hello <span class="data-pseudo">{{ pseudo }}</span></h1>
+
+		<section>
+			<div class="status-message">
+				<p class="welcome">Welcome {{ pseudo }}</p>
+			</div>
+			<div class="message-container">
+			{% for row in rows %}
+				<p class="message"><span>{{ row.author }}:</span> {{ row.message }}</p>
+			{% endfor %}
+			</div>
+		</section>
+
+
+		<form action="">
+		<p><input type="text" id="say" placeholder="Type your message"><input type="submit" value="Talk" id="send"></p>
+		</form>
+
+	<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+
+
+			var socket = io.connect("http://localhost:8080");
+			var container = $(".message-container");
+			var statusMessages = $(".status-message");
+			var input = $("#say");
+			var pseudo = $(".data-pseudo").html();
+
+			function resetForm() {
+				input.val("").focus();
+				disableSubmit();
+			}
+
+
+			function disableSubmit()
+			{
+				$("#send").attr('disabled', 'disabled');
+			}
+
+			function enableSubmit()
+			{
+				$("#send").removeAttr('disabled');;
+			}
+
+			function clearStatusMessages()
+			{
+				setTimeout(function() {
+				      statusMessages.find("p").fadeOut();
+				}, 2000);
+			}
+
+			function deleteLast()
+			{
+				if (container.find(".message").eq(13).length >= 1) {
+					container.find(".message").eq(13).fadeOut();
+				}
+			}
+			function outputMessage(type, message) {
+				if(type == "new_user")
+				{
+					var output = "<p class='" + type + "'>" + message + "</p>"
+					statusMessages.html(output);
+					clearStatusMessages();
+					return;
+				}
+			    var output = "<p class='" + type + "'>" + message + "</p>";
+				deleteLast();
+				container.prepend(output);
+			}
+
+			clearStatusMessages();
+			resetForm();
+			socket.emit("newUser", pseudo);
+
+			socket.on("message", function(type, message) {
+				outputMessage(type, message);
+			});
+
+
+			input.keyup(function() {
+				if ($(this).val() == "") {
+					disableSubmit();
+				} else {
+					enableSubmit();
+				}
+			});
+
+			$("form").submit(function() {
+				socket.emit("newMessage", input.val());
+				outputMessage("message", "<span>" + pseudo + ":</span> " + input.val());
+				resetForm();
+				return false;
+			});
+
+	</script>
+</body>
+{% endblock %}

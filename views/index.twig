@@ -1,0 +1,26 @@
+{% extends "base.twig" %}
+
+{% block body %}
+<body class="page-index">
+	<div class="login">
+		<h1>Pick a username</h1>
+
+		<form action="/set-pseudo" method="post">
+			
+		<p><input name="pseudo" type="text" id="pseudo" {% if pseudo is defined %} value="{{pseudo}}" {% endif %}><input type="submit" value="Go !" id="send"></p>
+		</form>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+
+			$("#pseudo").focus();
+
+			var socket = io.connect("http://localhost:8080");
+
+
+			socket.emit("setPseudo", "Gabriel");
+	</script>
+</body>
+{% endblock %}
